@@ -70,8 +70,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="emp_save_btn">保存</button>
             </div>
         </div>
     </div>
@@ -125,6 +125,8 @@
 </div>
 
 <script type="text/javascript">
+    var totalRecord;
+
     $(function () {
         to_page(1);
     });
@@ -175,6 +177,8 @@
         $("#page_info_area").append("当前 " + result.extend.pageInfo.pageNum +" 页，" +
             "总 " + result.extend.pageInfo.pages + " 页，" +
             "总 " + result.extend.pageInfo.total + " 条记录")
+
+        totalRecord = result.extend.pageInfo.total;
     }
 
     //解析分页条
@@ -232,13 +236,47 @@
         //ul加入到nav中
         var navEle = $("<nav></nav>").append(ul)
         navEle.appendTo("#page_nav_area")
+    }
 
-        $("#emp_add_modal_btn").click(function () {
-            $("#empAddModal").modal({
-                backdrop: "static"
-            })
+    //点击新增按钮弹出模态框
+    $("#emp_add_modal_btn").click(function () {
+        //发送ajax请求，查出部门信息，显示在下拉列表中
+        getDepts();
+
+        //弹出模态框
+        $("#empAddModal").modal({
+            backdrop: "static"
+        })
+    })
+
+    function getDepts( ) {
+        $.ajax({
+            url: "${APP_PATH}/depts",
+            type: "GET",
+            success: function (result) {
+                // console.log(result)
+                $.each(result.extend.depts, function () {
+                    var optionEle = $("<option></option>").append(this.deptName).attr("value", this.deptId);
+                    optionEle.appendTo("#empAddModal select");
+                })
+            }
         })
     }
+
+    $("#emp_save_btn").click(function () {
+    //    模态框中填写的表单数据提交给服务器进行保存
+    //    发送ajax请求保存员工
+        $.ajax({
+            url: "${APP_PATH}/emp",
+            type: "POST",
+            data: $("#empAddModal form").serialize(),
+            success: function (result) {
+                // alert(result.msg);
+                $("#empAddModal").modal("hide");
+                to_page(totalRecord);
+            }
+        })
+    })
 </script>
 </body>
 </html>
